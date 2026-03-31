@@ -1,128 +1,59 @@
-# 🛍️ StyleZone PK Chatbot
+# 👗 StyleZone PK — AI Chatbot
 
-A simple AI-powered chatbot for an online clothing store **StyleZone PK**, built using **Python** and the **Groq API**.
-This chatbot responds to customer queries related to products, pricing, and ordering details in a friendly tone (Roman Urdu / English).
+A full-stack AI-powered chatbot for an online clothing store, built with Python (Flask) and Groq API using LLaMA 3.3 70B model.
 
----
+## ✨ Features
 
-## 🚀 Features
+- 🤖 AI-powered responses using LLaMA 3.3 70B via Groq API
+- 🌐 Bilingual support — English & Roman Urdu
+- ⚡ Real-time responses with typing indicator
+- 🎨 Beautiful Purple/Pink gradient UI with Dark/Light theme
+- 📱 Responsive design — works on mobile too
+- 🛍️ Quick chips for Products, Prices, Delivery, Order, WhatsApp
 
-* 🤖 AI-based chatbot using Groq LLM
-* 🧾 Predefined shop details and product catalog
-* 💬 Conversational interaction (chat history maintained)
-* 🌐 Supports Roman Urdu & English responses
-* 🔒 Restricts responses to shop-related queries only
+## 🛠️ Tech Stack
 
----
+- **Backend:** Python, Flask, Flask-CORS
+- **AI Model:** LLaMA 3.3 70B (via Groq API)
+- **Frontend:** HTML, CSS, JavaScript
+- **Other:** Prompt Engineering, REST API
 
-## 🏬 Shop Details
+## 🚀 How to Run
 
-* **Name:** StyleZone PK
-* **Location:** Lahore
-* **WhatsApp:** 0300-1234567
-* **Delivery Time:** 3–5 working days
-
----
-
-## 👕 Products & Prices
-
-| Product     | Price (PKR) |
-| ----------- | ----------- |
-| Lawn Suit   | Rs. 2500    |
-| Linen Shirt | Rs. 1800    |
-| Jeans       | Rs. 3000    |
-| Kurta       | Rs. 1500    |
-
----
-
-## 📦 Order Process
-
-1. WhatsApp message karein: **0300-1234567**
-2. Product ka naam aur size batayein
-3. Apna address share karein
-4. Delivery 3–5 working days mein ho gi
-
----
-
-## 🛠️ Technologies Used
-
-* Python 🐍
-* Groq API 🤖
-* dotenv (for environment variables)
-
----
-
-## ⚙️ Installation & Setup
-
-### 1️⃣ Clone Repository
-
+**1. Clone the repository:**
 ```bash
-git clone https://github.com/your-username/stylezone-chatbot.git
-cd stylezone-chatbot
+git clone https://github.com/Rabia-Raz/AI-Projects-Journey.git
+cd AI-Projects-Journey/stylezone-pk-chatbot
 ```
 
-### 2️⃣ Install Dependencies
-
+**2. Install dependencies:**
 ```bash
-pip install groq python-dotenv
+pip install -r requirements.txt
 ```
 
-### 3️⃣ Setup Environment Variables
-
-Create a `.env` file in the root directory:
-
-```
-GROQ_API_KEY=your_api_key_here
-```
-
----
-
-## ▶️ Run the Project
-
+**3. Setup API Key:**
 ```bash
-python your_script_name.py
+cp .env.example .env
+# .env mein apni Groq API key daalo
 ```
 
----
-
-## 💬 Example Interaction
-
-```
-You: Lawn suit ka price kya hai?
-Bot: Lawn Suit Rs. 2500 ka hai 😊
-
-You: Order kaise karein?
-Bot: WhatsApp par message karein 0300-1234567 par...
+**4. Run the app:**
+```bash
+python app.py
 ```
 
----
+**5. Browser mein kholo:**
+```
+http://localhost:5001
+```
 
-## ⚠️ Rules (Chatbot Behavior)
+## 📸 Preview
 
-* Sirf **StyleZone PK** se related baat karega
-* Agar koi irrelevant sawaal ho:
+![Chatbot Preview](preview.png)
 
-  > "I can only help you with StyleZone PK related queries!"
-* Friendly aur helpful tone maintain karega
+## 👩‍💻 Built By
 
----
+**Rabia Raz** — BS Artificial Intelligence Student  
+Khawaja Fareed University of Engineering and Information Technology
 
-## 📌 Future Improvements
-
-* GUI version (Tkinter / Web App)
-* Online payment integration
-* Product images & catalog system
-* Multi-language support
-
----
-
-## 👩‍💻 Author
-
-Developed by **Riya (BSAI Student)** 💡
-Learning AI, Python & building real-world projects 🚀
-
----
-
-## ⭐ Support
-
-Agar project pasand aaye to ⭐ star zaroor dein!
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/rabia-raz-ai)
