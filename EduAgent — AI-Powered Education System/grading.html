@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grading & Reports — EduAgent</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">🎓</span>
+      <span class="logo-text">EduAgent</span>
+    </div>
+    <nav class="nav">
+      <a href="../index.html" class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="train.html" class="nav-item"><span class="nav-icon">📚</span> Train Data</a>
+      <a href="question-paper.html" class="nav-item"><span class="nav-icon">📝</span> Question Paper</a>
+      <a href="check-paper.html" class="nav-item"><span class="nav-icon">✅</span> Check Papers</a>
+      <a href="grading.html" class="nav-item active"><span class="nav-icon">📊</span> Grading & Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-dot"></div><span>AI Ready</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h1>📊 Grading & Reports</h1>
+      <p>View all student results and generate class performance reports</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2>📋 Student Results</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" onclick="exportCSV()">📥 Export CSV</button>
+          <button class="btn-secondary" onclick="clearResults()">🗑️ Clear All</button>
+        </div>
+      </div>
+
+      <div id="results-table-wrap">
+        <p style="font-size:13px;color:var(--gray-500);">No results yet. Check some papers first!</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2>🤖 AI Class Report</h2>
+        <button class="btn-primary" id="report-btn" onclick="generateClassReport()">📊 Generate Class Report</button>
+      </div>
+      <div class="ai-output empty" id="class-report">
+        Click "Generate Class Report" to get AI analysis of your class performance...
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    function renderResultsTable() {
+      const results = EduAgent.state.results;
+      const wrap = document.getElementById('results-table-wrap');
+
+      if (results.length === 0) {
+        wrap.innerHTML = '<p style="font-size:13px;color:var(--gray-500);">No results yet. Check some papers first!</p>';
+        return;
+      }
+
+      wrap.innerHTML = `
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Roll No</th>
+              <th>Subject</th>
+              <th>Score</th>
+              <th>Percentage</th>
+              <th>Grade</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.map(r => `
+              <tr>
+                <td>${r.studentName}</td>
+                <td>${r.rollNo || '—'}</td>
+                <td>${r.subject}</td>
+                <td>${r.score}/${r.totalMarks}</td>
+                <td>${r.pct}%</td>
+                <td><span class="grade-badge grade-${r.grade}">${r.grade}</span></td>
+                <td>${r.date}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function exportCSV() {
+      const results = EduAgent.state.results;
+      if (results.length === 0) return alert('No results to export!');
+
+      const headers = ['Student Name', 'Roll No', 'Class', 'Subject', 'Score', 'Total Marks', 'Percentage', 'Grade', 'Date'];
+      const rows = results.map(r => [r.studentName, r.rollNo || '', r.cls || '', r.subject, r.score, r.totalMarks, r.pct + '%', r.grade, r.date]);
+
+      const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'results.csv';
+      a.click();
+    }
+
+    function clearResults() {
+      if (!confirm('Are you sure you want to delete all results?')) return;
+      EduAgent.state.results = [];
+      EduAgent.save();
+      renderResultsTable();
+    }
+
+    async function generateClassReport() {
+      const results = EduAgent.state.results;
+      if (results.length === 0) return alert('No results to analyze! Check some papers first.');
+
+      const btn = document.getElementById('report-btn');
+      const out = document.getElementById('class-report');
+      btn.disabled = true;
+      btn.textContent = '⏳ Analyzing...';
+      out.classList.remove('empty');
+      out.textContent = '🤖 Generating class performance report...';
+
+      const summary = results.map(r =>
+        `${r.studentName}: ${r.score}/${r.totalMarks} (${r.pct}%, Grade ${r.grade})`
+      ).join('\n');
+
+      try {
+        const report = await EduAgent.callGroq(
+          'You are an educational data analyst. Analyze class performance data and provide actionable insights for teachers.',
+          `Analyze this class performance data and provide:
+1. Overall class performance summary
+2. Strengths and weaknesses of the class
+3. Students needing extra attention (failing/borderline)
+4. Top performers
+5. Recommendations for the teacher
+
+Class Results:
+${summary}
+
+Provide a concise, professional teacher's report.`
+        );
+        out.textContent = report;
+        EduAgent.addActivity('📊 Generated class performance report', 'purple');
+      } catch (err) {
+        out.textContent = '❌ Error: ' + err.message;
+      }
+
+      btn.disabled = false;
+      btn.textContent = '📊 Generate Class Report';
+    }
+
+    renderResultsTable();
+  </script>
+</body>
+</html>

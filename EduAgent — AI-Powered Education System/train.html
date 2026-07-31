@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Train Data — EduAgent</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">🎓</span>
+      <span class="logo-text">EduAgent</span>
+    </div>
+    <nav class="nav">
+      <a href="../index.html" class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="train.html" class="nav-item active"><span class="nav-icon">📚</span> Train Data</a>
+      <a href="question-paper.html" class="nav-item"><span class="nav-icon">📝</span> Question Paper</a>
+      <a href="check-paper.html" class="nav-item"><span class="nav-icon">✅</span> Check Papers</a>
+      <a href="grading.html" class="nav-item"><span class="nav-icon">📊</span> Grading & Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-dot"></div><span>AI Ready</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h1>📚 Train Data</h1>
+      <p>Upload study material, notes, and documents to teach your AI agent</p>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <h2>Upload Documents</h2>
+          <div class="upload-zone" id="drop-zone">
+            <span class="upload-icon">📄</span>
+            <p><strong>Click to upload</strong> or drag & drop files here</p>
+            <p style="font-size:12px; margin-top:6px; color:var(--gray-500);">Supports: PDF, TXT files</p>
+            <input type="file" id="file-input" accept=".txt,.pdf" multiple style="display:none" />
+          </div>
+          <div id="pdf-status" style="display:none; margin-top:12px; padding:12px 16px; background:#EFF6FF; border-radius:8px; font-size:13px; color:#1E40AF; border:1px solid #BFDBFE;">
+            ⏳ <span id="pdf-status-text">PDF process ho raha hai...</span>
+          </div>
+          <div style="margin-top:16px;">
+            <div class="form-group">
+              <label>📋 Or Paste Notes / Text Content</label>
+              <textarea id="paste-content" placeholder="Paste your notes, chapter summaries, or any study material here..." rows="5"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Document Name</label>
+              <input type="text" id="doc-name" placeholder="e.g. Chapter 5 - Photosynthesis" />
+            </div>
+            <div class="form-group">
+              <label>Subject / Topic</label>
+              <input type="text" id="doc-subject" placeholder="e.g. Biology, Mathematics, History..." />
+            </div>
+            <button class="btn-primary" onclick="addDocument()">➕ Add to Knowledge Base</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🤖 AI Document Analysis</h2>
+          <p style="font-size:13px; color:var(--gray-500); margin-bottom:12px;">Select a document to get AI-generated summary and key topics</p>
+          <div class="form-group">
+            <label>Select Document</label>
+            <select id="analyze-select"><option value="">— Choose a document —</option></select>
+          </div>
+          <button class="btn-primary" onclick="analyzeDocument()">🔍 Analyze with AI</button>
+          <div class="ai-output empty" id="analysis-output" style="margin-top:16px;">Analysis will appear here...</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>📦 Knowledge Base <span style="font-size:13px;color:var(--gray-500);font-weight:400;" id="doc-counter">(0 documents)</span></h2>
+          <div id="doc-list">
+            <div class="empty-state"><span>📭</span><p>No documents yet. Upload your first document!</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    // PDF.js ko properly load karo — onload ke baad workerSrc set karo
+    function loadPDFJS(callback) {
+      if (window.pdfjsLib) return callback();
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.onload = function() {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        callback();
+      };
+      script.onerror = function() { alert('PDF.js load nahi hua — internet check karo'); };
+      document.head.appendChild(script);
+    }
+
+    // PDF se SIRF clean readable text nikalo
+    async function extractPDFText(file) {
+      return new Promise((resolve, reject) => {
+        loadPDFJS(async () => {
+          const statusDiv = document.getElementById('pdf-status');
+          const statusText = document.getElementById('pdf-status-text');
+          statusDiv.style.display = 'block';
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            statusText.textContent = `"${file.name}" load ho raha hai...`;
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let allText = '';
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+              statusText.textContent = `Page ${pageNum} / ${pdf.numPages} parh raha hai...`;
+              const page = await pdf.getPage(pageNum);
+              const content = await page.getTextContent();
+              let pageText = '';
+              let lastY = null;
+              for (const item of content.items) {
+                if (!item.str || !item.str.trim()) continue;
+                if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) pageText += '\n';
+                pageText += item.str + ' ';
+                lastY = item.transform[5];
+              }
+              if (pageText.trim()) allText += `\n--- Page ${pageNum} ---\n${pageText.trim()}\n`;
+            }
+
+            statusDiv.style.display = 'none';
+            allText = allText.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+
+            if (allText.length < 50) {
+              reject(new Error('PDF mein readable text nahi mila — yeh scanned/image PDF lag rahi hai. Content paste karein.'));
+            } else {
+              resolve(allText);
+            }
+          } catch (err) {
+            statusDiv.style.display = 'none';
+            reject(err);
+          }
+        });
+      });
+    }
+
+    async function handleFiles(files) {
+      for (const file of Array.from(files)) {
+        try {
+          const name = file.name.replace(/\.[^/.]+$/, '');
+          let content = '';
+          if (file.name.toLowerCase().endsWith('.pdf')) {
+            content = await extractPDFText(file);
+          } else {
+            content = await file.text();
+          }
+          const stored = content.substring(0, 10000);
+          EduAgent.state.trainedDocs.push({ name, subject: 'Uploaded', content: stored, added: new Date().toLocaleDateString('en-PK') });
+          EduAgent.addActivity(`📄 Uploaded: "${file.name}" — ${stored.length} chars`, 'green');
+          EduAgent.save();
+          renderDocs();
+          alert(`✅ "${file.name}" add ho gaya!\n${stored.length} characters extract hue.`);
+        } catch (err) {
+          document.getElementById('pdf-status').style.display = 'none';
+          alert(`❌ "${file.name}" error:\n${err.message}`);
+          EduAgent.addActivity(`❌ Error: ${file.name}`, 'red');
+        }
+      }
+    }
+
+    function renderDocs() {
+      const docs = EduAgent.state.trainedDocs;
+      document.getElementById('doc-counter').textContent = `(${docs.length} document${docs.length !== 1 ? 's' : ''})`;
+      const list = document.getElementById('doc-list');
+      const sel = document.getElementById('analyze-select');
+      if (docs.length === 0) {
+        list.innerHTML = `<div class="empty-state"><span>📭</span><p>No documents yet.</p></div>`;
+        sel.innerHTML = `<option value="">— Choose a document —</option>`;
+        return;
+      }
+      list.innerHTML = docs.map((doc, i) => `
+        <div class="file-item">
+          <span class="file-icon">📄</span>
+          <div class="file-info">
+            <div class="file-name">${doc.name}</div>
+            <div class="file-size">${doc.subject || 'General'} • ${doc.content.length} chars • Added ${doc.added}</div>
+          </div>
+          <span class="file-status trained">Trained</span>
+          <button class="btn-danger" onclick="removeDoc(${i})">🗑️</button>
+        </div>`).join('');
+      sel.innerHTML = `<option value="">— Choose a document —</option>` + docs.map((d, i) => `<option value="${i}">${d.name}</option>`).join('');
+    }
+
+    function addDocument() {
+      const content = document.getElementById('paste-content').value.trim();
+      const name = document.getElementById('doc-name').value.trim();
+      const subject = document.getElementById('doc-subject').value.trim();
+      if (!content) return alert('Please paste or enter some content!');
+      if (!name) return alert('Please enter a document name!');
+      EduAgent.state.trainedDocs.push({ name, subject, content, added: new Date().toLocaleDateString('en-PK') });
+      EduAgent.addActivity(`📚 Added: "${name}"`, 'blue');
+      EduAgent.save();
+      document.getElementById('paste-content').value = '';
+      document.getElementById('doc-name').value = '';
+      document.getElementById('doc-subject').value = '';
+      renderDocs();
+    }
+
+    function removeDoc(i) {
+      if (!confirm('Remove this document?')) return;
+      const name = EduAgent.state.trainedDocs[i].name;
+      EduAgent.state.trainedDocs.splice(i, 1);
+      EduAgent.addActivity(`🗑️ Removed: "${name}"`, 'orange');
+      EduAgent.save();
+      renderDocs();
+    }
+
+    async function analyzeDocument() {
+      const idx = document.getElementById('analyze-select').value;
+      if (idx === '') return alert('Please select a document!');
+      const doc = EduAgent.state.trainedDocs[idx];
+      const out = document.getElementById('analysis-output');
+      out.classList.remove('empty');
+      out.textContent = '🤖 Analyzing document...';
+      try {
+        const result = await EduAgent.callGroq(
+          'You are an educational AI assistant. Analyze ONLY the actual document content provided. Give: 1) Brief summary (3-4 sentences), 2) Key topics as a list, 3) Suggested question types. Do NOT make assumptions.',
+          `Document: "${doc.name}"\nSubject: ${doc.subject}\n\nContent:\n${doc.content}`
+        );
+        out.textContent = result;
+      } catch (err) {
+        out.textContent = '❌ Error: ' + err.message;
+      }
+    }
+
+    const zone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    zone.onclick = () => fileInput.click();
+    zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('dragover'); };
+    zone.ondragleave = () => zone.classList.remove('dragover');
+    zone.ondrop = (e) => { e.preventDefault(); zone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); };
+    fileInput.onchange = (e) => handleFiles(e.target.files);
+    renderDocs();
+  </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduAgent — AI-Powered Education System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">🎓</span>
+      <span class="logo-text">EduAgent</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="pages/train.html" class="nav-item"><span class="nav-icon">📚</span> Train Data</a>
+      <a href="pages/question-paper.html" class="nav-item"><span class="nav-icon">📝</span> Question Paper</a>
+      <a href="pages/check-paper.html" class="nav-item"><span class="nav-icon">✅</span> Check Papers</a>
+      <a href="pages/grading.html" class="nav-item"><span class="nav-icon">📊</span> Grading & Reports</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-dot"></div><span>AI Ready</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Dashboard</h1>
+        <p>Welcome to EduAgent — Your AI Education Assistant</p>
+      </div>
+      <div class="topbar-right">
+        <div class="api-badge">⚡ Powered by Groq AI</div>
+      </div>
+    </header>
+
+    <section class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon">📚</div>
+        <div class="stat-info">
+          <span class="stat-number" id="doc-count">0</span>
+          <span class="stat-label">Documents Trained</span>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">📝</div>
+        <div class="stat-info">
+          <span class="stat-number" id="paper-count">0</span>
+          <span class="stat-label">Papers Generated</span>
+        </div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <span class="stat-number" id="checked-count">0</span>
+          <span class="stat-label">Papers Checked</span>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-info">
+          <span class="stat-number" id="avg-grade">—</span>
+          <span class="stat-label">Average Grade</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="action-grid">
+        <a href="pages/train.html" class="action-card">
+          <div class="action-icon">📚</div>
+          <h3>Upload & Train</h3>
+          <p>Add PDFs, notes, and study material to train your AI agent</p>
+          <span class="action-btn">Start Training →</span>
+        </a>
+        <a href="pages/question-paper.html" class="action-card">
+          <div class="action-icon">📝</div>
+          <h3>Generate Paper</h3>
+          <p>Create custom question papers based on your uploaded material</p>
+          <span class="action-btn">Generate Now →</span>
+        </a>
+        <a href="pages/check-paper.html" class="action-card">
+          <div class="action-icon">✅</div>
+          <h3>Check Assignment</h3>
+          <p>Upload student answers for AI-powered grading and feedback</p>
+          <span class="action-btn">Check Paper →</span>
+        </a>
+        <a href="pages/grading.html" class="action-card">
+          <div class="action-icon">📊</div>
+          <h3>View Reports</h3>
+          <p>See grading results, performance analytics and export reports</p>
+          <span class="action-btn">View Reports →</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="recent">
+      <h2>Recent Activity</h2>
+      <div id="activity-list" class="activity-list"></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('doc-count').textContent = EduAgent.state.trainedDocs.length;
+    document.getElementById('paper-count').textContent = EduAgent.state.papers.length;
+    document.getElementById('checked-count').textContent = EduAgent.state.results.length;
+
+    if (EduAgent.state.results.length > 0) {
+      const avg = Math.round(EduAgent.state.results.reduce((s, r) => s + r.pct, 0) / EduAgent.state.results.length);
+      document.getElementById('avg-grade').textContent = EduAgent.getGrade(avg);
+    }
+
+    EduAgent.renderActivity(document.getElementById('activity-list'));
+  </script>
+</body>
+</html>
